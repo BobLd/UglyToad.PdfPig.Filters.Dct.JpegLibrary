@@ -31,6 +31,8 @@
 		<Product>PdfPig.Filters.Dct.JpegLibrary</Product>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<PackageIcon>pdfpig.png</PackageIcon>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>UglyToad.PdfPig.Filters.Dct.JpegLibrary.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 
 	<!-- Start From JpegLibrary -->
