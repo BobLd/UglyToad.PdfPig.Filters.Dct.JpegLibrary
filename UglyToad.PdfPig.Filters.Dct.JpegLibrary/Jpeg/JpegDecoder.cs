@@ -58,7 +58,7 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg
         public void SetInput(ReadOnlySequence<byte> input)
         {
             _inputBuffer = input;
-
+            
             _frameHeader = null;
             _restartInterval = 0;
         }
@@ -171,7 +171,7 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg
         /// </summary>
         /// <param name="quality">The estimated quality factor.</param>
         /// <returns>True if the quality is estimated. False when quantization tables don't exists or loaded.</returns>
-        public bool TryEstimateQuanlity(out float quality)
+        public bool TryEstimateQuality(out float quality)
         {
             if (_quantizationTables is null)
             {

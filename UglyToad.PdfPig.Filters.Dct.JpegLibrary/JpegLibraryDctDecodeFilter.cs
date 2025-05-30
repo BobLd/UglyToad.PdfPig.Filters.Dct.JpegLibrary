@@ -15,17 +15,17 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary
         public bool IsSupported => true;
 
         /// <inheritdoc />
-        public ReadOnlyMemory<byte> Decode(ReadOnlySpan<byte> input, DictionaryToken streamDictionary, IFilterProvider filterProvider, int filterIndex)
+        public Memory<byte> Decode(Memory<byte> input, DictionaryToken streamDictionary, IFilterProvider filterProvider, int filterIndex)
         {
             var decoder = new JpegDecoder();
 
-            decoder.SetInput(input.ToArray().AsMemory());
+            decoder.SetInput(input);
             decoder.Identify();
 
             int width = decoder.Width;
             int height = decoder.Height;
 
-            byte[] ycbcr = new byte[width * height * decoder.NumberOfComponents];
+            Memory<byte> ycbcr = new byte[width * height * decoder.NumberOfComponents];
 
             if (decoder.Precision == 8)
             {
@@ -100,8 +100,8 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary
                 // Convert YCbCr to RGB
                 for (int i = 0; i < height; i++)
                 {
-                    JpegColorConverter.Shared.ConvertYCbCr8ToRgb24(ycbcr.AsSpan(i * width * 3, width * 3),
-                        ycbcr.AsSpan(i * width * 3, width * 3),
+                    JpegColorConverter.Shared.ConvertYCbCr8ToRgb24(ycbcr.Span.Slice(i * width * 3, width * 3),
+                        ycbcr.Span.Slice(i * width * 3, width * 3),
                         width);
                 }
             }
@@ -114,8 +114,8 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary
                 // Convert YCbCrK to CMYK
                 for (int i = 0; i < height; i++)
                 {
-                    JpegColorConverter.Shared.ConvertYCbCrK8ToCmyk24(ycbcr.AsSpan(i * width * 4, width * 4),
-                        ycbcr.AsSpan(i * width * 4, width * 4),
+                    JpegColorConverter.Shared.ConvertYCbCrK8ToCmyk24(ycbcr.Span.Slice(i * width * 4, width * 4),
+                        ycbcr.Span.Slice(i * width * 4, width * 4),
                         width);
                 }
             }
