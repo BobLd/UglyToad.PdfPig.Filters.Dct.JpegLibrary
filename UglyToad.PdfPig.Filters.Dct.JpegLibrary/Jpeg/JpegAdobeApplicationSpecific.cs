@@ -1,25 +1,16 @@
-﻿using System.Buffers;
+using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 
 namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg
 {
     internal readonly struct JpegAdobeApplicationSpecific
     {
-        private static readonly byte[] _adobeKey = "Adobe"u8.ToArray();
-
-        public byte[] DctVersion { get; }
-
-        public byte[] Flags0 { get; }
-
-        public byte[] Flags1 { get; }
+        private static ReadOnlySpan<byte> AdobeKey => "Adobe"u8;
 
         public byte ColorTransformCode { get; }
 
-        private JpegAdobeApplicationSpecific(byte[] dctVersion, byte[] flags0, byte[] flags1, byte colorTransformCode)
+        private JpegAdobeApplicationSpecific(byte colorTransformCode)
         {
-            DctVersion = dctVersion;
-            Flags0 = flags0;
-            Flags1 = flags1;
             ColorTransformCode = colorTransformCode;
         }
 
@@ -33,22 +24,13 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg
 
             // See 'Adobe Technical Note #5116'
 
-            // DCTDecode ignores and skips any APPE marker segment that does not begin with the ‘Adobe’ 5-character string.
-            if (firstSpan.Length >= 12 && MemoryExtensions.SequenceEqual(_adobeKey, firstSpan.Slice(0, 5)))
+            // DCTDecode ignores and skips any APPE marker segment that does not begin with the 'Adobe' 5-character string.
+            if (firstSpan.Length >= 12 && firstSpan.Slice(0, 5).SequenceEqual(AdobeKey))
             {
-                // Two-byte DCTEncode/DCTDecode version number (presently X’65)
-                byte[] dctVersion = firstSpan.Slice(5, 2).ToArray();
-
-                // Two-byte flags0 0x8000 bit: Encoder used Blend=1 downsampling
-                byte[] flags0 = firstSpan.Slice(7, 2).ToArray();
-
-                // Two-byte flags1
-                byte[] flags1 = firstSpan.Slice(9, 2).ToArray();
-
                 // One-byte color transform code
-                byte colorTransformCode = firstSpan.Slice(11, 1)[0];
+                byte colorTransformCode = firstSpan[11];
 
-                adobeApplicationSpecific = new JpegAdobeApplicationSpecific(dctVersion, flags0, flags1, colorTransformCode);
+                adobeApplicationSpecific = new JpegAdobeApplicationSpecific(colorTransformCode);
                 return true;
             }
 

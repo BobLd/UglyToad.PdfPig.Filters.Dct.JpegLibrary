@@ -97,13 +97,8 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary
 
             if (decoder.NumberOfComponents == 3)
             {
-                // Convert YCbCr to RGB
-                for (int i = 0; i < height; i++)
-                {
-                    JpegColorConverter.Shared.ConvertYCbCr8ToRgb24(ycbcr.Span.Slice(i * width * 3, width * 3),
-                        ycbcr.Span.Slice(i * width * 3, width * 3),
-                        width);
-                }
+                // Convert YCbCr to RGB — process all rows in one call over contiguous memory
+                JpegColorConverter.Shared.ConvertYCbCr8ToRgb24(ycbcr.Span, ycbcr.Span, width * height);
             }
             else if (decoder.NumberOfComponents == 4)
             {
@@ -111,13 +106,8 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary
                 // GHOSTSCRIPT-697234-0.pdf
                 // GHOSTSCRIPT-698721-0.zip-6.pdf
 
-                // Convert YCbCrK to CMYK
-                for (int i = 0; i < height; i++)
-                {
-                    JpegColorConverter.Shared.ConvertYCbCrK8ToCmyk24(ycbcr.Span.Slice(i * width * 4, width * 4),
-                        ycbcr.Span.Slice(i * width * 4, width * 4),
-                        width);
-                }
+                // Convert YCbCrK to CMYK — process all rows in one call over contiguous memory
+                JpegColorConverter.Shared.ConvertYCbCrK8ToCmyk24(ycbcr.Span, ycbcr.Span, width * height);
             }
             
             return ycbcr;

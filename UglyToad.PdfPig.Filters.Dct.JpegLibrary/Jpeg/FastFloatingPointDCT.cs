@@ -241,9 +241,8 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg
             d.V3L = c0 - c2;
             d.V5L = c3 - c1;
 
-            float invsqrt2 = 0.707107f;
-            c0 = (c0 + c2) * invsqrt2;
-            c3 = (c3 + c1) * invsqrt2;
+            c0 = (c0 + c2) * InvSqrt2;
+            c3 = (c3 + c1) * InvSqrt2;
 
             d.V1L = c0 + c3;
             d.V7L = c0 - c3;

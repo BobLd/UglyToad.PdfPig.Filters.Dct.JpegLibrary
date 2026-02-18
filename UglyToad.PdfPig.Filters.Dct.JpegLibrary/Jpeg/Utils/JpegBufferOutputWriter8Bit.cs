@@ -39,17 +39,20 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg.Utils
             int writeWidth = Math.Min(width - x, 8);
             int writeHeight = Math.Min(height - y, 8);
 
+            int rowStride = width * componentCount;
             ref byte destinationRef = ref MemoryMarshal.GetReference(_output.Span);
-            destinationRef = ref Unsafe.Add(ref destinationRef, y * width * componentCount + x * componentCount + componentIndex);
+            destinationRef = ref Unsafe.Add(ref destinationRef, y * rowStride + x * componentCount + componentIndex);
 
             for (int destY = 0; destY < writeHeight; destY++)
             {
-                ref byte destinationRowRef = ref Unsafe.Add(ref destinationRef, destY * width * componentCount);
+                ref byte destinationPixelRef = ref destinationRef;
                 for (int destX = 0; destX < writeWidth; destX++)
                 {
-                    Unsafe.Add(ref destinationRowRef, destX * componentCount) = ClampTo8Bit(Unsafe.Add(ref blockRef, destX));
+                    destinationPixelRef = ClampTo8Bit(Unsafe.Add(ref blockRef, destX));
+                    destinationPixelRef = ref Unsafe.Add(ref destinationPixelRef, componentCount);
                 }
                 blockRef = ref Unsafe.Add(ref blockRef, 8);
+                destinationRef = ref Unsafe.Add(ref destinationRef, rowStride);
             }
         }
 
