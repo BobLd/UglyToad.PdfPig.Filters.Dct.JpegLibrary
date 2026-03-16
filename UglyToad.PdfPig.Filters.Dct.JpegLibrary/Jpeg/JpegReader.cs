@@ -170,7 +170,7 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg
                 length = default;
                 return false;
             }
-            length = (ushort)(buffer[0] << 8 | buffer[1] - 2);
+            length = (ushort)((buffer[0] << 8 | buffer[1]) - 2);
             _data = _data.Slice(2);
             return true;
         }
@@ -189,7 +189,7 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg
                 length = default;
                 return false;
             }
-            length = (ushort)(buffer[0] << 8 | buffer[1] - 2);
+            length = (ushort)((buffer[0] << 8 | buffer[1]) - 2);
             return true;
         }
 
