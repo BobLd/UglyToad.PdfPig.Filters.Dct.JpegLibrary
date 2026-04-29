@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netstandard2.1;net462;net471;net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;netstandard2.1;net462;net471;net6.0;net8.0;net9.0</TargetFrameworks>
 		<LangVersion>12</LangVersion>
-		<Version>0.1.12.2</Version>
+		<Version>0.1.14.0</Version>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
@@ -13,7 +13,7 @@
 		<IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">true</IsAotCompatible>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)'!='net8.0'">
+	<PropertyGroup Condition="'$(TargetFramework)'!='net8.0' AND '$(TargetFramework)'!='net9.0'">
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 	</PropertyGroup>
 
@@ -69,7 +69,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="PdfPig" Version="0.1.12" />
+		<PackageReference Include="PdfPig" Version="0.1.14" />
 	</ItemGroup>
 
 </Project>
