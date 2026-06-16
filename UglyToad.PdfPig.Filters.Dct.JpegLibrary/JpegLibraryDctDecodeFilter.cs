@@ -11,6 +11,8 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary
     /// </summary>
     public sealed class JpegLibraryDctDecodeFilter : IFilter
     {
+        private static readonly NameToken ColorTransform = NameToken.Create("ColorTransform");
+
         /// <inheritdoc />
         public bool IsSupported => true;
 
@@ -65,15 +67,14 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary
                  */
                 shouldTransform = decoder.AdobeApplicationSpecific.Value.ColorTransformCode > 0;
             }
-            else if (streamDictionary.TryGet(NameToken.Create("ColorTransform"), out var token))
+            else if (streamDictionary.TryGet<NumericToken>(ColorTransform, out var token))
             {
                 /*
                  * If the Adobe-defined marker code in the encoded data indicating the ColorTransform value is not present
                  * then the value specified in this dictionary entry will be used.
                  */
 
-                // TODO - use scanner? Need to make sure it's a direct ref
-
+                shouldTransform = token.Int == 1;
             }
             else
             {
