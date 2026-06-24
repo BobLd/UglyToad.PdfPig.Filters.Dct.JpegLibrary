@@ -424,7 +424,14 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg.ScanDecoder
             int mcusPerColumn = _mcusPerColumn;
             int mcusPerLine = _mcusPerLine;
             int levelShift = _levelShift;
-            JpegHuffmanDecodingComponent[] components = _components;
+
+            // The final dequantization + IDCT must cover every component of the frame. We deliberately
+            // enumerate the frame components here rather than the _components array: _components holds
+            // per-scan decoding state that is overwritten on every ProcessScan call, so after a sequence
+            // of non-interleaved (single-component) progressive scans it no longer maps one-to-one to the
+            // frame components. Relying on it caused some components to be transformed twice and others
+            // (e.g. the luma plane) not at all, producing a corrupted image.
+            JpegFrameComponentSpecificationParameters[] frameComponents = _frameHeader.Components!;
 
             Unsafe.SkipInit(out JpegBlock8x8F blockFBuffer);
             Unsafe.SkipInit(out JpegBlock8x8F outputFBuffer);
@@ -435,11 +442,12 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg.ScanDecoder
                 for (int colMcu = 0; colMcu < mcusPerLine; colMcu++)
                 {
                     // Scan an interleaved mcu... process components in order
-                    foreach (JpegHuffmanDecodingComponent component in components)
+                    for (int index = 0; index < frameComponents.Length; ++index)
                     {
-                        int index = component.ComponentIndex;
-                        int h = component.HorizontalSamplingFactor;
-                        int v = component.VerticalSamplingFactor;
+                        JpegFrameComponentSpecificationParameters frameComponent = frameComponents[index];
+                        JpegQuantizationTable quantizationTable = Decoder.GetQuantizationTable(frameComponent.QuantizationTableSelector);
+                        int h = frameComponent.HorizontalSamplingFactor;
+                        int v = frameComponent.VerticalSamplingFactor;
                         int offsetX = colMcu * h;
                         int offsetY = rowMcu * v;
 
@@ -451,7 +459,7 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg.ScanDecoder
                                 ref JpegBlock8x8 blockRef = ref allocator.GetBlockReference(index, offsetX + x, blockOffsetY);
 
                                 // Dequantization
-                                DequantizeBlockAndUnZigZag(component.QuantizationTable, ref blockRef, ref blockFBuffer);
+                                DequantizeBlockAndUnZigZag(quantizationTable, ref blockRef, ref blockFBuffer);
 
                                 // IDCT
                                 FastFloatingPointDCT.TransformIDCT(ref blockFBuffer, ref outputFBuffer, ref tempFBuffer);
