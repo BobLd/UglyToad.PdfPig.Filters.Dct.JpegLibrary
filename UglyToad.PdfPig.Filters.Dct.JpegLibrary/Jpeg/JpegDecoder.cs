@@ -45,6 +45,12 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg
         public JpegAdobeApplicationSpecific? AdobeApplicationSpecific { get; private set; }
 
         /// <summary>
+        /// True when a JFIF (APP0) marker was found in the stream. A JFIF marker mandates
+        /// that 3-component image data is encoded as YCbCr (and 1-component as grayscale).
+        /// </summary>
+        public bool HasJfifMarker { get; private set; }
+
+        /// <summary>
         /// Set JPEG stream content to decode.
         /// </summary>
         /// <param name="input">The JPEG stream.</param>
@@ -155,6 +161,9 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg
                     break;
                 case JpegMarker.EndOfImage:
                     return false;
+                case JpegMarker.App0:
+                    ProcessApp0Marker(ref reader);
+                    break;
                 case JpegMarker.App14:
                     ProcessAdobeApplicationSpecificMarker(ref reader);
                     break;
@@ -309,6 +318,34 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg
                 ThrowInvalidDataException(reader.ConsumedByteCount - length + bytesConsumed, "Failed to parse scan header.");
             }
             return scanHeader;
+        }
+
+        private static ReadOnlySpan<byte> JfifIdentifier => "JFIF\0"u8;
+
+        private void ProcessApp0Marker(ref JpegReader reader)
+        {
+            if (!reader.TryReadLength(out ushort length))
+            {
+                ThrowInvalidDataException(reader.ConsumedByteCount,
+                    "Unexpected end of input data when reading segment length.");
+            }
+
+            if (!reader.TryReadBytes(length, out ReadOnlySequence<byte> buffer))
+            {
+                ThrowInvalidDataException(reader.ConsumedByteCount,
+                    "Unexpected end of input data when reading segment content.");
+            }
+
+#if NO_READONLYSEQUENCE_FISTSPAN
+            ReadOnlySpan<byte> firstSpan = buffer.First.Span;
+#else
+            ReadOnlySpan<byte> firstSpan = buffer.FirstSpan;
+#endif
+
+            if (firstSpan.Length >= 5 && firstSpan.Slice(0, 5).SequenceEqual(JfifIdentifier))
+            {
+                HasJfifMarker = true;
+            }
         }
 
         private void ProcessAdobeApplicationSpecificMarker(ref JpegReader reader)
