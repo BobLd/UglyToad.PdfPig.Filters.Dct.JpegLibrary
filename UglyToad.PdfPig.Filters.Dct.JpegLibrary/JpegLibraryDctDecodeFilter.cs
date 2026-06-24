@@ -67,6 +67,17 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary
                  */
                 shouldTransform = decoder.AdobeApplicationSpecific.Value.ColorTransformCode > 0;
             }
+            else if (decoder.HasJfifMarker && decoder.NumberOfComponents == 3)
+            {
+                /*
+                 * A JFIF (APP0) marker mandates that 3-component data is encoded as YCbCr, so it
+                 * must be transformed to RGB. This takes precedence over the /ColorTransform entry
+                 * in the image dictionary: some producers emit a JFIF YCbCr JPEG while incorrectly
+                 * declaring /ColorTransform 0, which would otherwise leave the raw YCbCr samples
+                 * untouched and render with a pink/teal cast.
+                 */
+                shouldTransform = true;
+            }
             else if (streamDictionary.TryGet<NumericToken>(ColorTransform, out var token))
             {
                 /*
