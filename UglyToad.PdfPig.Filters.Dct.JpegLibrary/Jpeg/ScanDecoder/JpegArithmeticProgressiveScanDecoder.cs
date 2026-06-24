@@ -473,7 +473,11 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg.ScanDecoder
             int mcusPerColumn = _mcusPerColumn;
             int mcusPerLine = _mcusPerLine;
             int levelShift = _levelShift;
-            JpegArithmeticDecodingComponent[] components = _components;
+
+            // Enumerate the frame components (not the per-scan _components state, which is overwritten on
+            // every ProcessScan call) so every component is dequantized + IDCT'd exactly once. See the
+            // matching comment in JpegHuffmanProgressiveScanDecoder.Dispose.
+            JpegFrameComponentSpecificationParameters[] frameComponents = _frameHeader.Components!;
 
             Unsafe.SkipInit(out JpegBlock8x8F blockFBuffer);
             Unsafe.SkipInit(out JpegBlock8x8F outputFBuffer);
@@ -484,11 +488,12 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg.ScanDecoder
                 for (int colMcu = 0; colMcu < mcusPerLine; colMcu++)
                 {
                     // Scan an interleaved mcu... process components in order
-                    foreach (JpegArithmeticDecodingComponent component in components)
+                    for (int index = 0; index < frameComponents.Length; ++index)
                     {
-                        int index = component.ComponentIndex;
-                        int h = component.HorizontalSamplingFactor;
-                        int v = component.VerticalSamplingFactor;
+                        JpegFrameComponentSpecificationParameters frameComponent = frameComponents[index];
+                        JpegQuantizationTable quantizationTable = Decoder.GetQuantizationTable(frameComponent.QuantizationTableSelector);
+                        int h = frameComponent.HorizontalSamplingFactor;
+                        int v = frameComponent.VerticalSamplingFactor;
                         int offsetX = colMcu * h;
                         int offsetY = rowMcu * v;
 
@@ -500,7 +505,7 @@ namespace UglyToad.PdfPig.Filters.Dct.JpegLibrary.Jpeg.ScanDecoder
                                 ref JpegBlock8x8 blockRef = ref allocator.GetBlockReference(index, offsetX + x, blockOffsetY);
 
                                 // Dequantization
-                                DequantizeBlockAndUnZigZag(component.QuantizationTable, ref blockRef, ref blockFBuffer);
+                                DequantizeBlockAndUnZigZag(quantizationTable, ref blockRef, ref blockFBuffer);
 
                                 // IDCT
                                 FastFloatingPointDCT.TransformIDCT(ref blockFBuffer, ref outputFBuffer, ref tempFBuffer);
